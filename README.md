@@ -6,6 +6,23 @@ The Domain Status Service is a RESTful API designed to handle domain status chec
 1. **Submit Domain Endpoint**: Accepts POST requests to submit a domain for status checking and stores the status in a Redis database.
 2. **Domain Status Endpoint**: Accepts GET requests to retrieve the status of a domain from the Redis database.
 
+## Install
+You should have docker and docker compose installed.
+
+Then just run: 
+
+```sh
+docker compose up
+```
+
+## Structure
+
+In `docker-compose.yaml` you will see that there is 3 containers:
+
+- `redis`: Running a Redis server to store data. Volume pointing to `./redis-data` for persistence
+- `server`: Running the Go HTTP **Server**. The source code is into a volume pointing to `./server`
+- `client`: Running the Go HTTP **Client**. The source code is into a volume pointing to `./client`
+
 ## Endpoints
 
 ### 1. Submit Domain Endpoint

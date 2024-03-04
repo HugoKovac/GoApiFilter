@@ -34,6 +34,12 @@ func handlerSubmitDomain(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 		}
 
+		// Validate domain name using regular expression
+		if !domainRegex.MatchString(domain_submit.Domain) {
+			http.Error(w, "Invalid domain name", http.StatusBadRequest)
+			return
+		}
+
 		_, err := redisClient.Get(ctx, domain_submit.Domain).Result()
 		if err != nil { //* If not exist
 			statusChan := make(chan string)

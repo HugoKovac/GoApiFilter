@@ -51,29 +51,23 @@ func CheckDomain(domain string, status chan string) {
 	status <- domain + ": " + string(body)
 }
 
+func goRoutineRequests(url string, tld string, f func(domain string, status chan string)){
+	rtnChan := make(chan string)
+
+	for pos := range url {
+		go f(url[:pos+1]+tld, rtnChan)
+	}
+
+	// Collect responses from f calls
+	for range url {
+		log.Printf("rtnChan: %s\n", <-rtnChan)
+	}
+
+	close(rtnChan) // Close the channel after all submissions are done	
+}
 
 func main() {
-
-	status := make(chan string)
-	test := "xxxxxxxxxxxxx"
-	
-	for pos, _ := range(test) {
-		go SubmitDomain(test[:pos+1] + ".com", status)	
-	}
-	
-	<- status
-
-	for x:=range status {
-		log.Printf("Status: %s\n", x)
-	}
-	
-	for pos, _ := range(test) {
-		go CheckDomain(test[:pos] + ".com", status)	
-	}
-
-	<- status
-
-	for x:=range status {
-		log.Printf("%s", x)
-	}
+	goRoutineRequests("test", ".com", SubmitDomain) // submit new domain to check
+	goRoutineRequests("test", ".com", CheckDomain) // get status of domain
+	goRoutineRequests("test", "", CheckDomain) // get status of invalid domain
 }
