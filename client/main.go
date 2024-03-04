@@ -15,8 +15,7 @@ type Domain struct {
 	Domain string `json:"domain"`
 }
 
-func SubmitDomain(domain string, status chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
+func SubmitDomain(domain string, status chan string) {
 	data := Domain{Domain: domain}
 	var buffer bytes.Buffer
 	err := json.NewEncoder(&buffer).Encode(data)
@@ -38,10 +37,10 @@ func SubmitDomain(domain string, status chan string, wg *sync.WaitGroup) {
 	}
 
 	status <- string(body) + r.Status
+
 }
 
-func CheckDomain(domain string, status chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
+func CheckDomain(domain string, status chan string) {
 	data := Domain{Domain: domain}
 	var buffer bytes.Buffer
 	err := json.NewEncoder(&buffer).Encode(data)
@@ -66,22 +65,25 @@ func CheckDomain(domain string, status chan string, wg *sync.WaitGroup) {
 	status <- domain + ": " + string(body)
 }
 
-func goRoutineRequests(urls [][]string, f func(domain string, status chan string, wg *sync.WaitGroup)) {
-	rtnChan := make(chan string, 10)
+func goRoutineRequests(urls [][]string, f func(domain string, status chan string)) {
+	rtnChan := make(chan string, 100)
 	wg := sync.WaitGroup{}
 
 	for _, url := range urls {
 		wg.Add(1)
-		go f(url[0], rtnChan, &wg)
+		go func(url string) {
+			defer wg.Done()
+			f(url, rtnChan)
+			log.Println(<-rtnChan)
+		}(url[0])
 	}
 
 	wg.Wait()
 	close(rtnChan)
 
-	for url := range urls {
-		log.Printf("rtnChan: %s\n", url)
-	}
-
+	// for msg := range rtnChan {
+	// 	fmt.Println(msg)
+	// }
 }
 
 func openCsv(path string) [][]string {
@@ -108,7 +110,7 @@ func main() {
 
 	records := openCsv("./domain_name_1M.csv")
 
-	goRoutineRequests(records, SubmitDomain)
-	goRoutineRequests(records, CheckDomain)
+	goRoutineRequests(records[50000:55000], SubmitDomain)
+	goRoutineRequests(records[50000:55000], CheckDomain)
 
 }
