@@ -39,8 +39,18 @@ The endpoint expects a JSON object containing the domain name.
 ```
 
 #### Response
+- **200 OK**: Already exsit in database.
 - **201 Created**: If the domain is successfully submitted and added to the database.
 - **400 Bad Request**: If the request body is invalid.
+
+#### cUrl
+```sh
+curl --location 'http://localhost/v1/submit_domain' \
+--header 'Content-Type: application/json' \
+--data '{
+    "domain": "test.co"
+}'
+```
 
 ### 2. Domain Status Endpoint
 - **Path**: `/v1/domain_status`
@@ -52,6 +62,11 @@ The endpoint expects a JSON object containing the domain name.
 #### Response
 - The response contains the status of the domain.
   - Possible values: "blocked", "allowed", or "unknown" (if the domain is not found in the database).
+
+#### cUrl
+```sh
+curl --location 'http://localhost/v1/domain_status?domain=test.com'
+```
 
 ## Dependencies
 - **Redis**: The service utilizes Redis as a backend for storing domain status data.
@@ -92,4 +107,4 @@ has been added to simulate domain name processing.
 
 For a clearer view of performance, the time will be printed in red in the logs if timing > 4 seconds for a 201 and > 1 second for a 200.
 
-In `./client/main.go` a goroutine limit has been set up because the number of ports is limited. In the future, it will be possible to create a number of competing clients who will be able to send all their requests with the same client to keep the same port.
+In `./client/main.go` the number of client is limit because the number of port available is also limited.
