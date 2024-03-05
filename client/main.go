@@ -23,10 +23,11 @@ func SubmitDomain(domain string, status chan string) {
 		log.Print(err)
 		return
 	}
-	r, err := http.Post("http://server/v1/submit_domain", "application/json", &buffer)
 
+	r, err := http.Post("http://server/v1/submit_domain", "application/json", &buffer)
+	
 	if err != nil {
-		log.Print(err)
+		log.Println(err)
 		return
 	}
 	defer r.Body.Close()
@@ -67,23 +68,26 @@ func CheckDomain(domain string, status chan string) {
 
 func goRoutineRequests(urls [][]string, f func(domain string, status chan string)) {
 	rtnChan := make(chan string, 100)
+	limiter := make(chan bool, 50) // limit the number of concurrent go routines
+	// The limit is currently the number if port available to send requests
 	wg := sync.WaitGroup{}
+	var mutex = &sync.Mutex{}
 
 	for _, url := range urls {
+		limiter <- true
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
 			f(url, rtnChan)
+			mutex.Lock()
 			log.Println(<-rtnChan)
+			mutex.Unlock()
+			<- limiter
 		}(url[0])
 	}
 
 	wg.Wait()
 	close(rtnChan)
-
-	// for msg := range rtnChan {
-	// 	fmt.Println(msg)
-	// }
 }
 
 func openCsv(path string) [][]string {
@@ -110,7 +114,7 @@ func main() {
 
 	records := openCsv("./domain_name_1M.csv")
 
-	goRoutineRequests(records[50000:55000], SubmitDomain)
-	goRoutineRequests(records[50000:55000], CheckDomain)
+	// goRoutineRequests(records, SubmitDomain)
+	goRoutineRequests(records, CheckDomain)
 
 }

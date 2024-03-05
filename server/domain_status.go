@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-// Regular expression pattern for validating domain names
+// Regex for validating domain names
 var domainRegex = regexp.MustCompile(`^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,6}$`)
 
 /*

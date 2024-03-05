@@ -78,3 +78,18 @@ The endpoint expects a JSON object containing the domain name.
 
 ## Error Handling
 - The service handles errors such as invalid requests, database errors, and unknown domains gracefully, returning appropriate HTTP status codes and error messages.
+
+## Testing
+Testing focuses on the server's performance and resilience in handling a certain number of requests and domain names.
+
+That's why go's `testing` and `httptest` lib is not used, but another docker container is used as a client for load testing.
+
+In `./server/check_domain.go` you'll see that a
+```go
+time.Sleep(time.Second * 3)
+```
+has been added to simulate domain name processing.
+
+For a clearer view of performance, the time will be printed in red in the logs if timing > 4 seconds for a 201 and > 1 second for a 200.
+
+In `./client/main.go` a goroutine limit has been set up because the number of ports is limited. In the future, it will be possible to create a number of competing clients who will be able to send all their requests with the same client to keep the same port.

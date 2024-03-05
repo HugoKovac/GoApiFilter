@@ -28,6 +28,7 @@ func handlerSubmitDomain(w http.ResponseWriter, r *http.Request) {
 	rand.Seed(time.Now().UnixNano())
 
 	if r.Method == "POST" {
+		now := time.Now()
 		domain_submit := Domain{}
 		decoder := json.NewDecoder(r.Body).Decode(&domain_submit)
 		if decoder != nil {
@@ -48,13 +49,31 @@ func handlerSubmitDomain(w http.ResponseWriter, r *http.Request) {
 			status := <- statusChan //* wait go routines and get the status of check domain
 
 			err := redisClient.Set(ctx, domain_submit.Domain, status, 0).Err() //* value to domain
-			log.Printf("%s have been created\n", domain_submit.Domain)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
+
+			//* Logging
+			log.Printf("%s have been created in: ", domain_submit.Domain)
+			chrono := time.Since(now)
+			if chrono > 4 * time.Second {
+				log.Printf("\033[31m%s\033[0m", chrono)
+			} else {
+				log.Println(chrono)
+			}
+			//* End Logging
+			
 			w.WriteHeader(201) //* 201 CREATED
 		} else {//* If already exist
-			log.Printf("%s already exist in db\n", domain_submit.Domain)
+			//* Logging
+			log.Printf("%s already exist in db in: ", domain_submit.Domain)
+			chrono := time.Since(now)
+			if chrono > 1 * time.Second {
+				log.Printf("\033[31m%s\033[0m", chrono)
+			} else {
+				log.Println(chrono)
+			}
+			//* End Logging
 		}
 
 		return
