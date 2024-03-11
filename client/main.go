@@ -117,7 +117,7 @@ func openCsv(path string) [][]string {
 
 func main() {
 
-	records := openCsv("./alexa-domains-10M.csv")
+	records := openCsv("./alexa-domains-1M.csv")
 
 	goRoutineRequests(records, SubmitDomain, 500)
 	// goRoutineRequests(records, CheckDomain, 500)
