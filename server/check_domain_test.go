@@ -57,7 +57,7 @@ func TestHandlerSubmitDomain(t *testing.T) {
 }
 
 // Function that will do all the requests in go routines called in TestHandlerSubmitDomainStress
-func SubmitDomain(domain string, _status chan string, client *http.Client, url string, t *testing.T) {
+func SubmitDomain(domain string, client *http.Client, url string, t *testing.T) {
 	data := Domain{Domain: domain}
 	var buffer bytes.Buffer
 	err := json.NewEncoder(&buffer).Encode(data)

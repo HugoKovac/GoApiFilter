@@ -17,11 +17,10 @@ docker compose up
 
 ## Structure
 
-In `docker-compose.yaml` you will see that there is 3 containers:
+In `docker-compose.yaml` you will see that there is 2 containers:
 
 - `redis`: Running a Redis server to store data. Volume pointing to `./redis-data` for persistence
 - `server`: Running the Go HTTP **Server**. The source code is into a volume pointing to `./server`
-- `client`: Running the Go HTTP **Client**. The source code is into a volume pointing to `./client`
 
 ## Endpoints
 
@@ -77,8 +76,10 @@ curl --location 'http://localhost/v1/domain_status?domain=test.com'
 ## Code Structure
 - The code is structured into multiple files:
   - `main.go`: Contains the main server logic and HTTP request handlers.
-  - `domain.go`: Defines the `Domain` struct for JSON parsing.
-  - External dependencies are imported via `import` statements.
+  - `domain_status.go`: Containes the logic of the endpoint `/v1/submit_domain` 
+  - `domain_status_test.go`: Tests for `/v1/submit_domain` 
+  - `check_domain.go`: Containes the logic of the endpoint `/v1/domain_status`
+  - `check_domain_test.go`: Test for `/v1/domain_status`
 
 ## Redis Configuration
 - The Redis client is configured to connect to Redis server running at `redis:6379` with no authentication.
@@ -95,16 +96,19 @@ curl --location 'http://localhost/v1/domain_status?domain=test.com'
 - The service handles errors such as invalid requests, database errors, and unknown domains gracefully, returning appropriate HTTP status codes and error messages.
 
 ## Testing
-Testing focuses on the server's performance and resilience in handling a certain number of requests and domain names.
-
-That's why go's `testing` and `httptest` lib is not used, but another docker container is used as a client for load testing.
 
 In `./server/check_domain.go` you'll see that a
 ```go
 time.Sleep(time.Second * 3)
 ```
-has been added to simulate domain name processing.
+has been added (and commented) to simulate domain name processing.
 
-For a clearer view of performance, the time will be printed in red in the logs if timing > 4 seconds for a 201 and > 1 second for a 200.
+`TestHandlerDomainStatus` and `TestHandlerSubmitDomain` are doing basic and specific tests, to check if the endpoints are working as expected.
 
-In `./client/main.go` the number of client is limit because the number of port available is also limited.
+Then both of the endpoints are tested with `goRoutineRequests`
+
+### goRoutineRequests
+
+This function takes the list of domains and run the function passed as parameter in `X` goroutines. The goal is to stress test the endpoint(s)
+
+

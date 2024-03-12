@@ -39,31 +39,23 @@ func openCsv(path string) [][]string {
 
 }
 
-func goRoutineRequests(urls [][]string, f func(domain string, status chan string, client *http.Client, urlServer string, t *testing.T), client_nb int, urlServer string, t *testing.T) {
-	rtnChan := make(chan string, 100)
+func goRoutineRequests(urls [][]string, f func(domain string, client *http.Client, urlServer string, t *testing.T), client_nb int, urlServer string, t *testing.T) {
 	limiter := make(chan bool, client_nb) // limit the number of concurrent go routines
 	// The limit is currently the number if port available to send requests
 	wg := sync.WaitGroup{}
-	// var mutex = &sync.Mutex{}
 
 	for i := 0; i < client_nb; i++ {
 		wg.Add(1)
 		limiter <- true
 		client := &http.Client{}
-		go func(url_part [][]string, f func(domain string, status chan string, client *http.Client, urlServer string, t *testing.T), rtnChan chan string, client *http.Client, urlServer string, t *testing.T) {
+		go func(url_part [][]string, f func(domain string, client *http.Client, urlServer string, t *testing.T), client *http.Client, urlServer string, t *testing.T) {
 			defer wg.Done()
 			for _, url := range url_part {
-				f(url[0], rtnChan, client, urlServer, t)
-				// mutex.Lock()
-				// log.Println(<-rtnChan)
-				// mutex.Unlock()
+				f(url[0], client, urlServer, t)
 			}
 			<- limiter
-		}(urls[i*len(urls)/client_nb : (i+1)*len(urls)/client_nb], f, rtnChan, client, urlServer, t)
+		}(urls[i*len(urls)/client_nb : (i+1)*len(urls)/client_nb], f, client, urlServer, t)
 	}
 
-
-
 	wg.Wait()
-	close(rtnChan)
 }
