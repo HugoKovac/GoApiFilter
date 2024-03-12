@@ -7,7 +7,17 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"strings"
 )
+
+func contains(s []string, e string) bool {
+    for _, a := range s {
+        if !strings.Contains(a, e) {
+            return true
+        }
+    }
+    return false
+}
 
 func openCsv(path string) [][]string {
 	file, err := os.Open(path)
